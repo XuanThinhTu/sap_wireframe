@@ -1,0 +1,181 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 12px;
+  background: #fff;
+  color: #111;
+}
+header {
+  font-size: 14px;
+  font-weight: bold;
+  padding: 6px 0 10px;
+  border-bottom: 1px solid #ccc;
+}
+.toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 10px 0 14px;
+}
+.toolbar a {
+  font-size: 13px;
+  color: #0645ad;
+  text-decoration: none;
+}
+.toolbar a:hover {
+  text-decoration: underline;
+}
+
+h2 {
+  font-size: 14px;
+  margin: 18px 0 6px;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 3px;
+}
+.group {
+  margin-left: 8px;
+}
+.radio-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 6px 0;
+}
+label {
+  font-size: 13px;
+  min-width: 140px;
+}
+input,
+select,
+textarea {
+  font-size: 13px;
+  border: 1px solid #999;
+  padding: 4px 6px;
+}
+button {
+  padding: 6px 14px;
+  font-size: 13px;
+  border: 1px solid #666;
+  background: #f2f2f2;
+  cursor: pointer;
+}
+button:hover {
+  background: #d9d9d9;
+}
+.table {
+  border: 1px solid #999;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 13px;
+}
+.table th,
+.table td {
+  border: 1px solid #999;
+  padding: 6px 8px;
+}
+.table th {
+  background: #f7f7f7;
+}
+.pill {
+  font-size: 12px;
+  border: 1px solid #ccc;
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+.ok {
+  background: #e8f7e8;
+}
+.warn {
+  background: #fff6db;
+}
+.bad {
+  background: #ffe6e6;
+}
+.note {
+  font-size: 12px;
+  margin-top: 6px;
+  color: #333;
+}
+
+/* Mass Upload */
+.tab-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.tab-btn {
+  padding: 6px 12px;
+  border: 1px solid #999;
+  background: #f5f5f5;
+  cursor: pointer;
+  font-size: 13px;
+}
+.tab-btn.active {
+  background: #d9d9d9;
+  font-weight: bold;
+}
+.tab-content {
+  display: none;
+}
+.tab-content.active {
+  display: block;
+  margin-top: 15px;
+}
+.table th,
+.table td {
+  padding: 6px 10px;
+}
+.group,
+.btnbar,
+.tab-content {
+  margin-bottom: 25px;
+}
+
+/* Management */
+.status-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.tab-btn {
+  background: #f5f5f5;
+  border: 1px solid #aaa;
+  padding: 5px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.tab-btn.active {
+  background: #d9d9d9;
+  font-weight: bold;
+  border-color: #777;
+}
+.table th,
+.table td {
+  border: 1px solid #ccc;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+.table th {
+  background: #f7f7f7;
+  text-align: left;
+}
+.so-link {
+  color: #2b6cb0;
+  text-decoration: none;
+}
+.so-link:hover {
+  text-decoration: underline;
+}
+.muted {
+  color: #777;
+  text-align: center;
+}
+.status-pill {
+  font-size: 13px;
+  text-transform: uppercase;
+}

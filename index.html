@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>SAP GUI Prototype — SD Flow</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header>SD Prototype — SAP GUI Style (Wireframe)</header>
+    <div class="toolbar">
+      <a href="#/home">Home</a> |
+      <a href="#/create/single">Create SO (Single Upload)</a> |
+      <a href="#/create/mass">Create SO (Mass Upload)</a> |
+      <a href="#/tracking">Processing Status</a>
+    </div>
+
+    <div id="app"></div>
+
+    <!-- Scripts load -->
+    <script src="js/db.js"></script>
+    <script src="js/actions.js"></script>
+    <script src="js/views/home.js"></script>
+    <script src="js/views/createSingle.js"></script>
+    <script src="js/views/createMass.js"></script>
+    <script src="js/views/tracking.js"></script>
+    <script src="js/views/cancel.js"></script>
+    <script src="js/views/soDetail.js"></script>
+    <script src="js/router.js"></script>
+  </body>
+</html>
