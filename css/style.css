@@ -179,3 +179,127 @@ button:hover {
   font-size: 13px;
   text-transform: uppercase;
 }
+
+/* SO Details */
+.so-header {
+  display: flex;
+  gap: 20px;
+  border: 1px solid #ccc;
+  padding: 10px 15px;
+  margin-top: 10px;
+  background: #f9f9f9;
+  font-size: 13px;
+}
+
+.so-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.so-status {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+/* SO Detail – Sub Tabs (Item / Shipping / Procurement / Partner) */
+.subtab-bar {
+  display: flex;
+  gap: 6px;
+  margin: 12px 0 8px;
+}
+
+.subtab-btn {
+  background: #f5f5f5;
+  border: 1px solid #bbb;
+  padding: 5px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #111;
+}
+
+.subtab-btn.active {
+  background: #d9d9d9;
+  border-color: #666;
+  font-weight: bold;
+}
+
+.subtab-content {
+  display: none;
+  border: 1px solid #ccc;
+  background: #fff;
+  padding: 10px 15px;
+  margin-bottom: 15px;
+}
+
+.subtab-content.active {
+  display: block;
+}
+
+/* Detail table layout (aligned like SAP VA03 tabs) */
+.table-detail {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 4px;
+}
+.table-detail td {
+  border: 1px solid #ccc;
+  padding: 5px 8px;
+  vertical-align: top;
+}
+.table-detail tr:nth-child(even) {
+  background: #fafafa;
+}
+.table-detail strong {
+  font-weight: bold;
+  color: #222;
+}
+
+/* Button layout spacing */
+.btnbar {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+/* Item Detail navigation buttons */
+.nav-btn {
+  font-size: 11px;
+  padding: 2px 6px;
+  margin-right: 3px;
+  border: 1px solid #999;
+  background: #f3f3f3;
+  cursor: pointer;
+}
+.nav-btn:hover {
+  background: #e0e0e0;
+}
+/*all item*/
+.table-item {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+.table-item th,
+.table-item td {
+  border: 1px solid #ccc;
+  padding: 5px 6px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.table-item th {
+  background: #f7f7f7;
+  font-weight: bold;
+}
+
+.table-item tr:hover {
+  background: #f2f2f2;
+}

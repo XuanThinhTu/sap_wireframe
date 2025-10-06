@@ -259,6 +259,7 @@ function createAllSO() {
       shipTo: row.SoldToParty,
       custRef: row.CustomerReference,
       docDate: new Date().toISOString().slice(0, 10),
+      reqDelivDate: row.RequestedDeliveryDate,
       noItems: row.NoOfItems,
       totalQty: row.NoOfItems * 5,
       payTerm: 'Z001',
@@ -270,7 +271,7 @@ function createAllSO() {
 
     DB.items.unshift(rec);
 
-    // ✅ Nếu SO hoàn chỉnh → auto Delivery + update status
+    // ✅ Nếu SO valid → auto create Delivery
     if (!row.MissingField) {
       autoCreateDelivery(rec);
       rec.status = 'DELIVERED';
