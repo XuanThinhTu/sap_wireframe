@@ -47,55 +47,77 @@ function PGI(deliveryNo) {
   const empty = '<td></td>';
 
   /* --- HEADER LEVEL --- */
+  /* --- HEADER LEVEL --- */
   const headerHTML = `
-    <h2>Post Goods Issue</h2>
-    <table class="table-detail" style="width:100%; table-layout:fixed; font-size:13px; margin-top:10px;">
-      <tbody>
-        <tr><th colspan="4" style="text-align:left;background:#f5f5f5">Header level</th></tr>
-        <tr>${td('Outbound delivery number:', d.deliveryNo)}${td(
+  <div style="display:flex; align-items:center; justify-content:space-between;">
+    <h2>Post Goods Issue — ${d.deliveryNo}</h2>
+
+    <div style="display:flex; gap:8px;">
+<!-- 🔹 Button Delete -->
+      <button class="sap-btn" style="min-width:80px; background:#f8d7da; border:1px solid #e57373; color:#a94442;"
+        onclick="confirmDeleteDelivery('${d.deliveryNo}')">Delete</button>
+
+      <!-- 🔹 Button Display/Change -->
+      <button class="sap-btn" style="min-width:100px;">Display / Change</button>
+
+      
+
+      <!-- 🔹 Button Document Flow -->
+      <button class="sap-btn" style="min-width:120px;" onclick="openDocumentFlow('${
+        d.soNo || ''
+      }')">
+        Document Flow
+      </button>
+    </div>
+  </div>
+
+  <table class="table-detail" style="width:100%; table-layout:fixed; font-size:13px; margin-top:10px;">
+    <tbody>
+      <tr><th colspan="4" style="text-align:left;background:#f5f5f5">Header level</th></tr>
+      <tr>${td('Outbound delivery number:', d.deliveryNo)}${td(
     'Sales org:',
     d.salesOrg || '1000'
   )}</tr>
-        <tr>${td('Ship-to party:', d.shipTo)}${td(
+      <tr>${td('Ship-to party:', d.shipTo)}${td(
     'Distri.channel:',
     d.distChnl || '10'
   )}</tr>
-        <tr>${td('Document date:', planned)}${td(
+      <tr>${td('Document date:', planned)}${td(
     'Division:',
     d.division || '00'
   )}</tr>
-        <tr><td colspan="4" style="background:#f5f5f5;height:6px"></td></tr>
-        <tr>${td('Planned GI date:', planned)}${td('Time:', time00)}${td(
+      <tr><td colspan="4" style="background:#f5f5f5;height:6px"></td></tr>
+      <tr>${td('Planned GI date:', planned)}${td('Time:', time00)}${td(
     'Total weight:',
     weight
   )}${td('Unit of weight:', 'KG')}</tr>
-        <tr>${td('Actual GI date:', planned)}${td('Time:', time00)}${td(
+      <tr>${td('Actual GI date:', planned)}${td('Time:', time00)}${td(
     'No. of packages:',
     Math.ceil((d.totalQty || 10) / 5)
   )}${td('Volume:', volume)}</tr>
-        <tr>${td('Picked date:', planned)}${td('Time:', time00)}${td(
+      <tr>${td('Picked date:', planned)}${td('Time:', time00)}${td(
     'Picking status:',
     '-'
   )} ${td('Wm activity status:', '-')}</tr>
-        <tr>${td('Warehouse no:', '-')} ${td('Loading date:', planned)}${td(
+      <tr>${td('Warehouse no:', '-')} ${td('Loading date:', planned)}${td(
     'Time:',
     time00
   )}${td('Loading point:', '-')}</tr>
-        <tr>${td('Door for Whs:', '-')} ${td('Staging area:', '-')} ${td(
+      <tr>${td('Door for Whs:', '-')} ${td('Staging area:', '-')} ${td(
     'Transptn plan:',
     planned
   )}${td('Route:', '-')}</tr>
-        <tr>${td('Transptn status:', '-')} ${td('Route schedule:', '-')} ${td(
+      <tr>${td('Transptn status:', '-')} ${td('Route schedule:', '-')} ${td(
     'Pl. gds mvmt date:',
     planned
   )}${td('Time:', time00)}</tr>
-        <tr>${td('Act. gds mvmt date:', planned)}${td('Time:', time00)}${td(
+      <tr>${td('Act. gds mvmt date:', planned)}${td('Time:', time00)}${td(
     'Gds mvmt status:',
     d.status
   )}${empty}</tr>
-      </tbody>
-    </table>
-  `;
+    </tbody>
+  </table>
+`;
 
   /* --- TABS --- */
   const tabs = `
@@ -251,7 +273,54 @@ function postPGI(deliveryNo) {
   console.log('✅ Updated Delivery:', d);
   console.log('✅ Updated SO:', relatedSO);
 
+  // ✅ Auto-create Billing after PGI
+  if (relatedSO) {
+    createBilling(relatedSO);
+  }
+
   alert(`✅ PGI successfully posted for ${deliveryNo}`);
   location.hash = '#/tracking';
   rerender();
+}
+
+/* ===== Confirm & Delete Outbound Delivery ===== */
+function confirmDeleteDelivery(deliveryNo) {
+  const d = DB.deliveries?.find((x) => x.deliveryNo === deliveryNo);
+  if (!d) return alert(`Delivery ${deliveryNo} not found.`);
+
+  // Popup mô phỏng SAP standard
+  const message = `
+⚠️ Are you sure you want to delete Outbound Delivery ${deliveryNo}?
+
+━━━━━━━━━━━━━━━━━━━━━━
+Sales Org: ${d.salesOrg || '-'}
+Ship-to Party: ${d.shipTo || '-'}
+Delivery Date: ${d.date || '-'}
+Total Quantity: ${d.totalQty || '-'}
+Status: ${d.status || '-'}
+━━━━━━━━━━━━━━━━━━━━━━
+
+This action will remove:
+• The Outbound Delivery document
+• Its link to the related Sales Order
+• Any unposted PGI/Billing references
+  `;
+
+  if (confirm(message)) {
+    // Xóa delivery trong DB
+    DB.deliveries = DB.deliveries.filter((x) => x.deliveryNo !== deliveryNo);
+
+    // Cập nhật SO liên quan (nếu có)
+    const so = DB.items.find((x) => x.so === d.soNo);
+    if (so) so.status = 'INCOMPLETE';
+
+    console.log(`❌ Deleted Outbound Delivery ${deliveryNo}`);
+    alert(`✅ Delivery ${deliveryNo} successfully deleted.`);
+
+    // Quay lại tracking
+    location.hash = '#/tracking';
+    setTimeout(() => filterStatus('DELIVERED'), 50);
+  } else {
+    console.log('🚫 Deletion cancelled by user.');
+  }
 }

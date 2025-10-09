@@ -303,3 +303,27 @@ button:hover {
 .table-item tr:hover {
   background: #f2f2f2;
 }
+
+/* SAP-style buttons with icons */
+.sap-btn-mode,
+.sap-btn-flow {
+  font-size: 12px;
+  padding: 4px 10px;
+  border: 1px solid #bbb;
+  border-radius: 3px;
+  background: linear-gradient(#f9f9f9, #ececec);
+  cursor: pointer;
+  color: #222;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sap-btn-mode:hover,
+.sap-btn-flow:hover {
+  background: #e0e0e0;
+}
+
+.sap-icon {
+  font-size: 13px;
+}

@@ -3,7 +3,24 @@ function SODetail(so) {
   if (!x) return `<h2>Sales Order not found</h2>`;
 
   return `
-    <h2>Sales Order Detail — ${x.so}${x.delivery ? ' - ' + x.delivery : ''}</h2>
+    <h2 style="display:flex;align-items:center;gap:10px;">
+      <span>Sales Order Detail — ${x.so}${
+    x.delivery ? ' - ' + x.delivery : ''
+  }</span>
+
+      <!-- 🟦 Display/Change Button -->
+      <button class="sap-btn-mode" title="Display / Change Mode">
+        <span class="sap-icon">🖋️</span> Display / Change
+      </button>
+
+      <!-- 🟧 Document Flow Button -->
+      <button class="sap-btn-flow" title="View Document Flow" onclick="openDocumentFlow('${
+        x.so
+      }')">
+        <span class="sap-icon">🔗</span> Document Flow
+      </button>
+    </h2>
+
 
     <!-- Header Info -->
     <div class="so-header">
@@ -70,12 +87,11 @@ function SODetail(so) {
       <div><strong>Status:</strong> ${renderStatus(x.status)}</div>
     </div>
 
-    <div class="btnbar" style="margin-top:15px;">
-      <button onclick="doGI('${x.so}')">Post GI</button>
-      <button onclick="doBill('${x.so}')">Billing</button>
-      <button onclick="doCancel('${x.so}')">Cancel</button>
+    <div class="btnbar" style="margin-top:15px; text-align:right; display:flex; justify-content:flex-end; gap:8px;">
+      <button class="primary-btn" onclick="saveSO('${x.so}')">Save</button>
       <button onclick="location.hash='#/tracking'">Back</button>
     </div>
+
   `;
 }
 
@@ -396,4 +412,28 @@ function renderProcurementDetail(x) {
     </tbody>
   </table>
   `;
+}
+
+/* ====== Action: Save Sales Order ====== */
+function saveSO(soNo) {
+  const so = DB.items.find((i) => i.so === soNo);
+  if (!so) return alert('⚠️ Sales Order not found.');
+
+  // Nếu chưa có Delivery thì tự tạo mới
+  if (!so.delivery) {
+    autoCreateDelivery(so);
+    so.status = 'DELIVERED';
+    alert(
+      `✅ SO ${so.so} has been saved.\nDelivery ${so.delivery} automatically created.`
+    );
+  } else {
+    so.status = 'DELIVERED';
+    alert(`✅ SO ${so.so} has been saved and marked as DELIVERED.`);
+  }
+
+  console.log('✅ Updated Sales Order:', so);
+
+  // Quay lại tracking sau khi lưu
+  location.hash = '#/tracking';
+  setTimeout(() => filterStatus('DELIVERED'), 100);
 }

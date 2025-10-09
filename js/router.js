@@ -27,6 +27,13 @@ function router() {
     return;
   }
 
+  // 🚚 Dynamic route: Billing (PGI Detail) (#/billing/:pgiNo)
+  if (hash.startsWith('#/billing/')) {
+    const pgiNo = hash.split('/')[2];
+    app.innerHTML = Billing(pgiNo);
+    return;
+  }
+
   // 🧾 Các route tĩnh khác
   app.innerHTML = (routes[hash] || Home)();
 }

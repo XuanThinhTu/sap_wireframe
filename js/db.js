@@ -5,6 +5,7 @@ const DB = {
   billSeq: 500000,
   items: [], // SO
   deliveries: [], // Delivery
+  billings: [], // Billing Documents
 };
 
 // === ID Generators ===
@@ -28,7 +29,7 @@ function autoCreateDelivery(so) {
   // Create corresponding Delivery
   const newDelivery = {
     deliveryNo: nextDL(),
-    soNo: so.so,
+    soNo: so.so, // ✅ thêm dòng này để liên kết SO → DL → BI
     salesOrg: so.salesOrg,
     distChnl: so.distChnl,
     division: so.division,
