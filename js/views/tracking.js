@@ -142,7 +142,9 @@ function renderTrackingTable(view) {
           <th>Dist. Chnl</th>
           <th>Division</th>
           <th>Sold-to Party</th>
-          <th>Ship-to Party</th>
+          <th>Net Value</th>
+          <th>Document Date</th>
+          <th>Req. Delivery Date</th>
           <th>Cust. Ref.</th>
           <th>Date</th>
           <th>Qty</th>
