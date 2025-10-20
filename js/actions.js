@@ -163,3 +163,55 @@ function openDocumentFlow(docNo) {
 
   document.getElementById('app').innerHTML = html;
 }
+
+/* ===== Global: Render Unified Status / Phase Pill ===== */
+function renderStatus(status) {
+  // ✅ Cho phép mapping cả Process Phase (ORDER / DELIVERY / INVOICE / ACCOUNT_*)
+  // và legacy status (DELIVERED / PGI_POSTED / BILLED / etc.)
+
+  let label = status || 'CREATED';
+  let bg = '#e0e0e0',
+    color = '#000';
+
+  const phaseMap = {
+    ORDER: { bg: '#fff3cd', color: '#856404', label: 'Order processing' },
+    DELIVERY: { bg: '#d9edf7', color: '#31708f', label: 'Delivery processing' },
+    INVOICE: { bg: '#dff0d8', color: '#3c763d', label: 'Invoice processing' },
+    ACCOUNT_PARTIAL: {
+      bg: '#e0e0e0',
+      color: '#555',
+      label: 'Accounting – Partial',
+    },
+    ACCOUNT_COMPLETE: {
+      bg: '#c8e6c9',
+      color: '#256029',
+      label: 'Accounting – Complete',
+    },
+  };
+
+  const legacyMap = {
+    INCOMPLETE: { bg: '#fff3cd', color: '#856404', label: 'Incomplete' },
+    DELIVERED: { bg: '#d9edf7', color: '#31708f', label: 'Delivered' },
+    PGI_POSTED: { bg: '#dff0d8', color: '#3c763d', label: 'PGI Posted' },
+    BILLED: { bg: '#c8e6c9', color: '#256029', label: 'Billed' },
+    CANCELLED: { bg: '#f2dede', color: '#a94442', label: 'Cancelled' },
+    COMPLETED: { bg: '#c8e6c9', color: '#256029', label: 'Completed' },
+    CREATED: { bg: '#fcf8e3', color: '#8a6d3b', label: 'Created' },
+  };
+
+  const map = phaseMap[status] || legacyMap[status];
+  if (map) ({ bg, color, label } = map);
+
+  return `
+    <div style="
+      background:${bg};
+      color:${color};
+      font-weight:bold;
+      padding:4px 8px;
+      border-radius:3px;
+      text-align:center;
+      min-width:120px;
+      display:inline-block;">
+      ${label}
+    </div>`;
+}

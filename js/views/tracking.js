@@ -1,383 +1,401 @@
-/* ===== tracking.js (chuẩn SAP wireframe) ===== */
+/* ===== tracking.js — SAP GUI Wireframe Style with ALV Actions ===== */
 const Tracking = () => `
   <h2>Sales Document Management</h2>
 
-  <!-- Filter buttons -->
-  <div class="status-tabs">
-    <button onclick="filterStatus('ALL')" class="tab-btn active">All</button>
-    <button onclick="filterStatus('INCOMPLETE')" class="tab-btn">Incomplete</button>
-    <button onclick="filterStatus('CREATED')" class="tab-btn">Created</button>
-    <button onclick="filterStatus('DELIVERED')" class="tab-btn">Delivery Created</button>
-    <button onclick="filterStatus('PGI_POSTED')" class="tab-btn">PGI Posted</button>
-    <button onclick="filterStatus('BILLED')" class="tab-btn">Billed</button>
-    <button onclick="filterStatus('CANCELLED')" class="tab-btn">Cancellation</button>
+  <!-- ===== Selection Criteria (Horizontal Filter Bar) ===== -->
+  <div class="filter-frame" 
+       style="border:1px solid #ccc; padding:10px; margin-top:10px; background:#fafafa; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+
+    <div class="filter-group">
+      <label style="font-weight:bold; margin-right:5px;">Process Phase:</label>
+      <select id="phaseFilter" style="min-width:160px;">
+        <option value="ALL">All</option>
+        <option value="ORDER">Order Processing</option>
+        <option value="DELIVERY">Delivery Processing</option>
+        <option value="INVOICE">Invoice Processing</option>
+        <option value="ACCOUNT_COMPLETE">Accounting</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label style="font-weight:bold; margin-right:5px;">Sales Doc Status:</label>
+      <select id="soStatusFilter" style="min-width:160px;">
+        <option value="ALL">All</option>
+        <option value="INCOMPLETE">Incomplete</option>
+        <option value="COMPLETE">Ordering Complete</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label style="font-weight:bold; margin-right:5px;">Delivery Doc Status:</label>
+      <select id="dlStatusFilter" style="min-width:160px;">
+        <option value="ALL">All</option>
+        <option value="READY_PGI">Ready to Post GI</option>
+        <option value="PGI_POSTED">GI Posted</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label style="font-weight:bold; margin-right:5px;">Billing Doc Status:</label>
+      <select id="biStatusFilter" style="min-width:160px;">
+        <option value="ALL">All</option>
+        <option value="READY_BILLING">Ready to Billing</option>
+        <option value="CANCELLED">Cancelled</option>
+        <option value="COMPLETED">Completed</option>
+        <option value="TO_POST">To be Posted</option>
+      </select>
+    </div>
+
+    <div style="margin-left:auto;">
+      <button class="sap-btn primary" onclick="applyFilters()">Go</button>
+    </div>
   </div>
 
-  <div id="trackingTable">${renderTrackingTable('ALL')}</div>
+  <!-- ===== Sales Document Block ===== -->
+  <div class="alv-block" style="border:1px solid #ccc; margin-top:15px;">
+    <div class="alv-header" 
+         style="display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:#f3f3f3;">
+      <h3 style="margin:0;">Sales Document</h3>
+      <div class="alv-actions" style="display:flex; gap:8px;">
+        <button class="sap-btn" onclick="massPostGI()">Post GI</button>
+        <button class="sap-btn" onclick="massReverseGI()">Reverse GI</button>
+        <button class="sap-btn" onclick="massCreateBilling()">Create Billing</button>
+        <button class="sap-btn" onclick="massCancelBilling()">Cancel Billing</button>
+      </div>
+    </div>
+    <div id="trackingTable">${renderTrackingTable()}</div>
+  </div>
 `;
-/* ===== Render Table (with Mass PGI & Mass Billing) ===== */
-function renderTrackingTable(view) {
-  const isDeliveryView = view === 'DELIVERED';
-  const isPGIView = view === 'PGI_POSTED';
-  const isBilledView = view === 'BILLED';
 
-  // --- CHỌN NGUỒN DỮ LIỆU ---
+/* ===== Apply Filter Logic ===== */
+function applyFilters() {
+  const phase = document.getElementById('phaseFilter').value;
+  const soStatus = document.getElementById('soStatusFilter').value;
+  const dlStatus = document.getElementById('dlStatusFilter').value;
+  const biStatus = document.getElementById('biStatusFilter').value;
+  renderTrackingTable({ phase, soStatus, dlStatus, biStatus });
+}
+
+/* ===== Render ALV Table ===== */
+/* ===== Apply Filters (multi-criteria filtering) ===== */
+function applyFilters() {
+  const phase = document.getElementById('phaseFilter').value;
+  const soStatus = document.getElementById('soStatusFilter').value;
+  const dlStatus = document.getElementById('dlStatusFilter').value;
+  const biStatus = document.getElementById('biStatusFilter').value;
+
+  // Lưu lại bộ lọc hiện tại (để rerender không reset)
+  window.activeFilters = { phase, soStatus, dlStatus, biStatus };
+
+  rerender();
+}
+
+/* ===== Render ALV Table (with filter logic applied) ===== */
+function renderTrackingTable(filters = window.activeFilters || {}) {
+  let {
+    phase = 'ALL',
+    soStatus = 'ALL',
+    dlStatus = 'ALL',
+    biStatus = 'ALL',
+  } = filters;
+
+  // Build dataset
   let data = [];
-  if (isDeliveryView) {
-    data = DB.deliveries.filter((x) => x.status === 'DELIVERED');
-  } else if (isPGIView) {
-    data = DB.deliveries.filter((x) => x.status === 'PGI_POSTED');
-  } else if (isBilledView) {
-    data = DB.billings.filter((x) => x.status === 'BILLED');
-  } else {
-    data = DB.items.filter((x) => x.so);
-  }
+  DB.items.forEach((so) => {
+    const dl = DB.deliveries.find((d) => d.soNo === so.so);
+    const bi = DB.billings.find((b) => b.soNo === so.so);
 
-  // --- HEADER LABEL ---
-  const headerLabel = isDeliveryView
-    ? 'Outbound Delivery Document'
-    : isPGIView
-    ? 'PGI Number'
-    : isBilledView
-    ? 'Billing Document'
-    : 'Sales Doc.';
+    data.push({
+      phase: mapPhase(so, dl, bi),
+      soStatus: so.status,
+      dlStatus: dl?.status || '-',
+      biStatus: bi?.status || '-',
+      soNo: so.so,
+      dlNo: dl?.deliveryNo || '-',
+      biNo: bi?.billingNo || '-',
+      soType: so.orderType || 'OR',
+      docDate: so.docDate || '-',
+      salesArea: `${so.salesOrg || '1000'} / ${so.distChnl || '10'} / ${
+        so.division || '00'
+      }`,
+      soldTo: so.soldTo || '-',
+      netValue: so.netValue || '—',
+      currency: so.currency || 'VND',
+      reqDelivDate: so.reqDelivDate || '-',
+    });
+  });
 
-  // --- ROWS ---
+  // === Filter logic ===
+  data = data.filter((x) => {
+    // 1️⃣ Filter by Process Phase
+    if (phase !== 'ALL' && x.phase !== phase) return false;
+
+    // 2️⃣ Filter by SO Status
+    if (soStatus !== 'ALL' && x.soStatus !== soStatus) return false;
+
+    // 3️⃣ Filter by Delivery Status
+    if (dlStatus !== 'ALL' && x.dlStatus !== dlStatus) return false;
+
+    // 4️⃣ Filter by Billing Status
+    if (biStatus !== 'ALL' && x.biStatus !== biStatus) return false;
+
+    return true;
+  });
+
+  // === Build table ===
   const rowsHTML = data.length
     ? data
-        .map((x) => {
-          if (isBilledView) {
-            return `
-              <tr data-status="${x.status}">
-                <td><a href="#/billing/${x.billingNo}" class="so-link">${
-              x.billingNo
-            }</a></td>
-                <td>${x.salesOrg || '-'}</td>
-                <td>${x.distChnl || '-'}</td>
-                <td>${x.division || '-'}</td>
-                <td>${x.soldTo || '-'}</td>
-                <td>${x.shipTo || '-'}</td>
-                <td>${x.custRef || '-'}</td>
-                <td>${x.date || '-'}</td>
-                <td>${x.totalQty || 0}</td>
-                <td>${x.netValue || 0} VND</td>
-                <td>${x.tax || 0} VND</td>
-                <td>${renderStatus(x.status)}</td>
-              </tr>`;
-          } else if (isPGIView) {
-            return `
-    <tr data-status="${x.status}">
-      <td><input type="checkbox" class="chk-pgi" value="${x.deliveryNo}"></td>
-      <td><a href="#/pgi/${
-        x.deliveryNo
-      }" class="so-link">${x.deliveryNo.replace('DL', 'PGI')}</a></td>
-      <td>${x.salesOrg}</td>
-      <td>${x.distChnl}</td>
-      <td>${x.division}</td>
-      <td>${x.soldTo}</td>
-      <td>${x.shipTo}</td>
-      <td>${x.custRef}</td>
-      <td>${x.date}</td>
-      <td>${x.totalQty}</td>
-      <td>${(x.totalQty * 0.68).toFixed(1)} KG</td>
-      <td>${(x.totalQty * 0.2).toFixed(2)} m³</td>
-      <td>${renderStatus(x.status)}</td>
-    </tr>`;
-          } else if (isDeliveryView) {
-            return `
-              <tr data-status="${x.status}">
-                <td><input type="checkbox" class="chk-dl" value="${
-                  x.deliveryNo
-                }"></td>
-                <td><a href="#/pgi/${x.deliveryNo}" class="so-link">${
-              x.deliveryNo
-            }</a></td>
-                <td>${x.salesOrg}</td>
-                <td>${x.distChnl}</td>
-                <td>${x.division}</td>
-                <td>${x.soldTo}</td>
-                <td>${x.shipTo}</td>
-                <td>${x.custRef}</td>
-                <td>${x.date}</td>
-                <td>${x.totalQty}</td>
-                <td>${(x.totalQty * 0.68).toFixed(1)} KG</td>
-                <td>${(x.totalQty * 0.2).toFixed(2)} m³</td>
-                <td>${renderStatus(x.status)}</td>
-              </tr>`;
-          } else {
-            return `
-              <tr data-status="${x.status}">
-                <td><a href="#/so/${x.so}" class="so-link">${x.so}</a></td>
-                <td>${x.salesOrg}</td>
-                <td>${x.distChnl}</td>
-                <td>${x.division}</td>
-                <td>${x.soldTo}</td>
-                <td>${x.shipTo}</td>
-                <td>${x.custRef}</td>
-                <td>${x.docDate}</td>
-                <td>${x.noItems || 1}</td>
-                <td>${x.totalQty}</td>
-                <td>${x.netValue}</td>
-                <td>${renderStatus(x.status)}</td>
-              </tr>`;
-          }
-        })
-        .join('')
-    : `<tr><td colspan="12" class="muted">No ${headerLabel}s available.</td></tr>`;
-
-  // --- TABLE STRUCTURE ---
-  let tableHTML = `
-    <table class="table" id="statusTable" style="width:100%;">
-      <thead>
+        .map(
+          (x) => `
         <tr>
-          ${
-            isDeliveryView
-              ? `<th><input type="checkbox" id="chkAllDL" title="Select all"></th>`
-              : isPGIView
-              ? `<th><input type="checkbox" id="chkAllPGI" title="Select all"></th>`
-              : ''
-          }
-          <th>${headerLabel}</th>
-          <th>Sales Org.</th>
-          <th>Dist. Chnl</th>
-          <th>Division</th>
+          <td><input type="checkbox" class="chk-so" value="${x.soNo}"></td>
+          <td>${renderPhase(x.phase)}</td>
+          <td><a href="#/so/${x.soNo}" class="so-link">${x.soNo}</a></td>
+          <td>${
+            x.dlNo !== '-'
+              ? `<a href="#/pgi/${x.dlNo}" class="so-link">${x.dlNo}</a>`
+              : '-'
+          }</td>
+          <td>${
+            x.biNo !== '-'
+              ? `<a href="#/billing/${x.biNo}" class="so-link">${x.biNo}</a>`
+              : '-'
+          }</td>
+          <td>${x.soType}</td>
+          <td>${x.docDate}</td>
+          <td>${x.salesArea}</td>
+          <td>${x.soldTo}</td>
+          <td>${x.netValue}</td>
+          <td>${x.currency}</td>
+          <td>${x.reqDelivDate}</td>
+        </tr>`
+        )
+        .join('')
+    : `<tr><td colspan="12" class="muted">No records match your criteria.</td></tr>`;
+
+  return `
+    <table class="table" style="width:100%; border-collapse:collapse;">
+      <thead style="background:#f7f7f7;">
+        <tr>
+          <th><input type="checkbox" id="chkAllSO" title="Select All"></th>
+          <th>Process Phase</th>
+          <th>Sales Documents</th>
+          <th>Delivery Documents</th>
+          <th>Billing Documents</th>
+          <th>Sales Order Type</th>
+          <th>Document Date</th>
+          <th>Sales Area</th>
           <th>Sold-to Party</th>
           <th>Net Value</th>
-          <th>Document Date</th>
-          <th>Req. Delivery Date</th>
-          <th>Cust. Ref.</th>
-          <th>Date</th>
-          <th>Qty</th>
-          <th>${isBilledView ? 'Net Value' : 'Weight'}</th>
-          <th>${isBilledView ? 'Tax' : 'Volume'}</th>
-          <th>Status</th>
+          <th>Currency</th>
+          <th>Requested Delivery Date</th>
         </tr>
       </thead>
       <tbody>${rowsHTML}</tbody>
     </table>
   `;
-
-  // --- MASS ACTION BUTTONS ---
-  if (isDeliveryView && data.length > 0) {
-    tableHTML += `
-      <div style="margin-top:10px; text-align:right;">
-        <button id="btnMassPGI" class="sap-btn">Post Goods Issue</button>
-      </div>`;
-  } else if (isPGIView && data.length > 0) {
-    tableHTML += `
-      <div style="margin-top:10px; text-align:right;">
-        <button id="btnMassBilling" class="sap-btn">Post to FI</button>
-      </div>`;
-  }
-
-  return tableHTML;
 }
 
-/* ====== Event Handlers ====== */
-document.addEventListener('click', function (e) {
-  // === Mass PGI ===
-  if (e.target && e.target.id === 'btnMassPGI') {
-    const selected = Array.from(
-      document.querySelectorAll('.chk-dl:checked')
-    ).map((chk) => chk.value);
-    if (!selected.length)
-      return alert('⚠️ Please select at least one Delivery to post PGI.');
+/* ===== Phase Mapping — exact per your description ===== */
+function mapPhase(so, dl, bi) {
+  const hasDL = !!dl;
+  const hasBI = !!bi;
 
-    selected.forEach((dlNo) => {
-      const dl = DB.deliveries.find((d) => d.deliveryNo === dlNo);
-      if (dl) {
-        dl.status = 'PGI_POSTED';
-        const so = DB.items.find((s) => s.so === dl.soNo);
-        if (so) so.status = 'PGI_POSTED';
-        console.log(`✅ PGI posted for Delivery ${dlNo}`);
-      }
-    });
-    alert(`✅ PGI posted for ${selected.length} deliveries.`);
-    document.getElementById('trackingTable').innerHTML =
-      renderTrackingTable('PGI_POSTED');
-  }
+  // 1) Đã có Billing -> Accounting
+  if (
+    hasBI &&
+    (bi.status === 'BILLED' ||
+      bi.status === 'COMPLETED' ||
+      bi.status === 'TO_POST')
+  )
+    return 'ACCOUNTING';
 
-  // === Mass Billing (Post to FI) ===
-  if (e.target && e.target.id === 'btnMassBilling') {
-    const selected = Array.from(
-      document.querySelectorAll('.chk-pgi:checked')
-    ).map((chk) => chk.value);
-    if (!selected.length)
-      return alert('⚠️ Please select at least one PGI to post Billing.');
+  // 2) Đã PGI nhưng chưa billing -> Invoice processing
+  if (hasDL && dl.status === 'PGI_POSTED') return 'INVOICE';
 
-    selected.forEach((dlNo) => {
-      const dl = DB.deliveries.find((d) => d.deliveryNo === dlNo);
-      if (!dl) return;
+  // 3) Có Delivery nhưng chưa PGI -> Delivery processing
+  if (hasDL && (dl.status === 'DELIVERED' || dl.status === 'OPEN'))
+    return 'DELIVERY';
 
-      const biNo = nextBI();
-      const so = DB.items.find((s) => s.so === dl.soNo);
+  // 4) Còn lại -> Order processing
+  return 'ORDER';
+}
 
-      const newBilling = {
-        billingNo: biNo,
-        soNo: dl.soNo,
-        deliveryNo: dl.deliveryNo,
-        salesOrg: dl.salesOrg,
-        distChnl: dl.distChnl,
-        division: dl.division,
-        soldTo: dl.soldTo,
-        shipTo: dl.shipTo,
-        custRef: dl.custRef,
-        date: new Date().toISOString().slice(0, 10),
-        totalQty: dl.totalQty,
-        netValue: so?.netValue || '100,000',
-        tax: '8,000',
-        status: 'BILLED',
+/* ===== Action: Post GI ===== */
+function massPostGI() {
+  const selected = getSelectedSOs();
+  if (!selected.length) return alert('⚠️ Please select at least one SO.');
+
+  selected.forEach((soNo) => {
+    const so = DB.items.find((s) => s.so === soNo);
+    if (!so) return;
+
+    // Nếu chưa có Delivery thì không thể PGI → tự tạo DL trước (như SAP VL01N từ SO)
+    let dl = DB.deliveries.find((d) => d.soNo === so.so);
+    if (!dl) {
+      // auto create DL giống function autoCreateDelivery trong db.js
+      const newDL = {
+        deliveryNo: nextDL(),
+        soNo: so.so,
+        salesOrg: so.salesOrg,
+        distChnl: so.distChnl,
+        division: so.division,
+        soldTo: so.soldTo,
+        shipTo: so.shipTo,
+        custRef: so.custRef,
+        date: so.reqDelivDate || new Date().toISOString().slice(0, 10),
+        totalQty: so.totalQty,
+        status: 'DELIVERED',
       };
-      DB.billings.unshift(newBilling);
-      dl.status = 'BILLED';
-      if (so) so.status = 'BILLED';
-
-      console.log(`✅ Billing ${biNo} created for Delivery ${dlNo}`);
-    });
-
-    alert(`✅ Posted Billing for ${selected.length} PGI document(s).`);
-    document.getElementById('trackingTable').innerHTML =
-      renderTrackingTable('BILLED');
-  }
-
-  // === Select All checkboxes ===
-  if (e.target && (e.target.id === 'chkAllDL' || e.target.id === 'chkAllPGI')) {
-    const checked = e.target.checked;
-    const selector = e.target.id === 'chkAllDL' ? '.chk-dl' : '.chk-pgi';
-    document
-      .querySelectorAll(selector)
-      .forEach((chk) => (chk.checked = checked));
-  }
-});
-
-/* ===== Event Handler: Mass PGI ===== */
-document.addEventListener('click', function (e) {
-  // Mass PGI
-  if (e.target && e.target.id === 'btnMassPGI') {
-    const selected = Array.from(
-      document.querySelectorAll('.chk-dl:checked')
-    ).map((chk) => chk.value);
-    if (!selected.length) {
-      alert('⚠️ Please select at least one Delivery to post PGI.');
-      return;
+      DB.deliveries.unshift(newDL);
+      dl = newDL;
     }
 
-    selected.forEach((dlNo) => {
-      const dl = DB.deliveries.find((d) => d.deliveryNo === dlNo);
-      if (dl) {
-        dl.status = 'PGI_POSTED';
-        const so = DB.items.find((s) => s.so === dl.soNo);
-        if (so) so.status = 'PGI_POSTED';
-        console.log(`✅ PGI posted for Delivery ${dlNo}`);
-      }
-    });
+    // PGI
+    postGI(so); // set so.gi = true
+    so.status = 'PGI_POSTED';
+    dl.status = 'PGI_POSTED';
+  });
 
-    alert(`✅ PGI posted for ${selected.length} delivery document(s).`);
-    document.getElementById('trackingTable').innerHTML =
-      renderTrackingTable('PGI_POSTED');
-  }
+  alert(`✅ PGI posted for ${selected.length} SO(s).`);
+  rerender();
+}
 
-  // Select All checkbox
-  if (e.target && e.target.id === 'chkAllDL') {
+/* ===== Action: Reverse GI ===== */
+function massReverseGI() {
+  const selected = getSelectedSOs();
+  if (!selected.length) return alert('⚠️ Please select at least one SO.');
+
+  selected.forEach((soNo) => {
+    const so = DB.items.find((s) => s.so === soNo);
+    if (!so) return;
+    const dl = DB.deliveries.find((d) => d.soNo === so.so);
+    if (dl && dl.status === 'PGI_POSTED') dl.status = 'DELIVERED';
+    so.status = 'DELIVERED';
+    so.gi = false;
+  });
+
+  alert(`↩️ GI reversed for ${selected.length} SO(s).`);
+  rerender();
+}
+
+/* ===== Action: Create Billing ===== */
+function massCreateBilling() {
+  const selected = getSelectedSOs();
+  if (!selected.length) return alert('⚠️ Please select at least one SO.');
+
+  let success = 0;
+  selected.forEach((soNo) => {
+    const so = DB.items.find((s) => s.so === soNo);
+    if (!so) return;
+
+    // Chỉ cho phép khi đã PGI
+    const dl = DB.deliveries.find((d) => d.soNo === so.so);
+    if (!dl || dl.status !== 'PGI_POSTED') return;
+
+    // Tạo billing
+    const ok = createBilling(so); // createBilling trong actions.js yêu cầu so.gi = true (đã được set khi Post GI)
+    if (ok) {
+      so.status = 'COMPLETED';
+      const bi = DB.billings.find((b) => b.soNo === so.so);
+      if (bi) bi.status = 'COMPLETED';
+      success++;
+    }
+  });
+
+  alert(`✅ Billing created for ${success} SO(s).`);
+  rerender();
+}
+
+/* ===== Action: Cancel Billing ===== */
+function massCancelBilling() {
+  const selected = getSelectedSOs();
+  if (!selected.length) return alert('⚠️ Please select at least one SO.');
+
+  let cnt = 0;
+  selected.forEach((soNo) => {
+    const so = DB.items.find((s) => s.so === soNo);
+    if (!so) return;
+
+    const bi = DB.billings.find((b) => b.soNo === so.so);
+    const dl = DB.deliveries.find((d) => d.soNo === so.so);
+
+    if (bi) {
+      bi.status = 'CANCELLED';
+      // đưa SO/DL trở lại trạng thái sau PGI (để có thể re-bill)
+      so.status = 'PGI_POSTED';
+      if (dl) dl.status = 'PGI_POSTED';
+      cnt++;
+    }
+  });
+
+  alert(`❌ Billing cancelled for ${cnt} SO(s).`);
+  rerender();
+}
+
+/* ===== Helpers ===== */
+function getSelectedSOs() {
+  return Array.from(document.querySelectorAll('.chk-so:checked')).map(
+    (c) => c.value
+  );
+}
+
+/* ===== Select All event ===== */
+document.addEventListener('click', function (e) {
+  if (e.target && e.target.id === 'chkAllSO') {
     const checked = e.target.checked;
     document
-      .querySelectorAll('.chk-dl')
+      .querySelectorAll('.chk-so')
       .forEach((chk) => (chk.checked = checked));
   }
 });
 
-/* ===== Filter Status ===== */
-function filterStatus(type) {
-  // Active tab button
-  document
-    .querySelectorAll('.tab-btn')
-    .forEach((b) => b.classList.remove('active'));
-  document
-    .querySelector(`.tab-btn[onclick*="${type}"]`)
-    ?.classList.add('active');
+/* ===== Render Phase Pill (Process Phase visual) ===== */
+function renderPhase(phase) {
+  const phaseMap = {
+    ORDER: {
+      bg: '#fff3cd',
+      color: '#856404',
+      label: 'Order processing',
+    },
+    DELIVERY: {
+      bg: '#d9edf7',
+      color: '#31708f',
+      label: 'Delivery processing',
+    },
+    INVOICE: {
+      bg: '#dff0d8',
+      color: '#3c763d',
+      label: 'Invoice processing',
+    },
+    ACCOUNT_PARTIAL: {
+      bg: '#e0e0e0',
+      color: '#555',
+      label: 'Accounting – Partial',
+    },
+    ACCOUNT_COMPLETE: {
+      bg: '#c8e6c9',
+      color: '#256029',
+      label: 'Accounting – Complete',
+    },
+  };
 
-  const container = document.getElementById('trackingTable');
+  const p = phaseMap[phase] || {
+    bg: '#eee',
+    color: '#000',
+    label: phase || '—',
+  };
 
-  // --- DELIVERY TAB ---
-  if (type === 'DELIVERED') {
-    // Nếu là tab Delivery Created → generate deliveries (nếu chưa có)
-    const newDeliveries = DB.items
-      .filter((x) => x.status === 'DELIVERED')
-      .map((x, idx) => {
-        const no = 'DL' + (DB.dlSeq + idx + 1);
-        if (!DB.deliveries.some((d) => d.deliveryNo === no)) {
-          DB.deliveries.push({
-            deliveryNo: no,
-            salesOrg: x.salesOrg,
-            distChnl: x.distChnl,
-            division: x.division,
-            soldTo: x.soldTo,
-            shipTo: x.shipTo,
-            custRef: x.custRef,
-            date: x.reqDelivDate || '2025-10-07',
-            totalQty: x.totalQty,
-            status: 'DELIVERED',
-          });
-        }
-        return DB.deliveries.find((d) => d.deliveryNo === no);
-      });
-
-    container.innerHTML = renderTrackingTable('DELIVERED');
-  }
-
-  // --- PGI TAB ---
-  else if (type === 'PGI_POSTED') {
-    // Hiển thị PGI Documents (đã post)
-    container.innerHTML = renderTrackingTable('PGI_POSTED');
-
-    // --- BILLED TAB ---
-  } else if (type === 'BILLED') {
-    container.innerHTML = renderTrackingTable('BILLED');
-  }
-
-  // --- CÁC TAB KHÁC ---
-  else {
-    container.innerHTML = renderTrackingTable('ALL');
-    const rows = container.querySelectorAll('#statusTable tbody tr');
-    rows.forEach((r) => {
-      const s = r.dataset.status || '';
-      if (type === 'ALL' || s === type) r.style.display = '';
-      else r.style.display = 'none';
-    });
-  }
-}
-
-/* ===== Status Pill (SAP Style) ===== */
-function renderStatus(status) {
-  let label = status || 'CREATED';
-  let bg = '#e0e0e0',
-    color = '#000';
-  switch (status) {
-    case 'DELIVERED':
-      bg = '#d9edf7';
-      color = '#31708f';
-      break;
-    case 'PGI_POSTED':
-      bg = '#dff0d8';
-      color = '#3c763d';
-      break;
-    case 'BILLED':
-      bg = '#c8e6c9';
-      color = '#256029';
-      break;
-    case 'CANCELLED':
-      bg = '#f2dede';
-      color = '#a94442';
-      break;
-    case 'INCOMPLETE':
-      bg = '#fff3cd';
-      color = '#856404';
-      break;
-    default:
-      bg = '#fcf8e3';
-      color = '#8a6d3b';
-      label = 'CREATED';
-      break;
-  }
-  return `<div class="status-pill" style="background:${bg};color:${color};font-weight:bold;padding:4px 8px;border-radius:3px;text-align:center;min-width:110px;display:inline-block;">${label}</div>`;
+  return `
+    <div style="
+      background:${p.bg};
+      color:${p.color};
+      padding:4px 8px;
+      border-radius:3px;
+      font-weight:bold;
+      text-align:center;
+      min-width:140px;
+      display:inline-block;">
+      ${p.label}
+    </div>`;
 }
