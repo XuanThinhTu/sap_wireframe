@@ -22,44 +22,105 @@ function SODetail(so) {
     </h2>
 
 
-    <!-- Header Info -->
-    <div class="so-header">
-      <div class="so-col">
-        <div><strong>Order:</strong> ${x.so}</div>
-        <div><strong>Sold-to party:</strong> ${x.soldTo || '—'}</div>
-        <div><strong>Ship-to party:</strong> ${
-          x.shipTo || x.soldTo || '—'
-        }</div>
-        <div><strong>Cust. Reference:</strong> ${x.custRef || '-'}</div>
-        <div><strong>Sales Area:</strong> ${x.salesOrg || '1000'} / ${
-    x.distChnl || '10'
-  } / ${x.division || '00'}</div>
-      </div>
+            <!-- ===== Header Info: 5 boxes in one horizontal row ===== -->
+    <div class="so-header"
+         style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; margin-top:10px;">
 
-      <div class="so-col">
-        <div><strong>Net value:</strong> ${x.netValue || '0'} ${
-    x.currency || 'VND'
-  }</div>
-        <div><strong>Doc. date:</strong> ${x.docDate || '-'}</div>
-        <div><strong>Payment term:</strong> ${x.payTerm || 'Z001'}</div>
-        <div><strong>Incoterm:</strong> ${x.incoterm || 'EXW'}</div>
-        <div><strong>Req. Deliv. date:</strong> ${x.reqDelivDate || '—'}</div>
-        <div><strong>Pricing date:</strong> ${x.docDate || '-'}</div>
-      </div>
+      <!-- 🟦 Order Data -->
+      <fieldset style="border:1px solid #ccc; padding:8px; border-radius:3px; background:#fdfdfd;">
+        <legend style="font-weight:bold; font-size:13px;">Order Data</legend>
+        <table style="font-size:13px;">
+          <tr><td><strong>Sold-to party Addr.:</strong></td><td>${
+            x.soldTo || '—'
+          }</td></tr>
+          <tr><td><strong>Cust. Reference:</strong></td><td>${
+            x.custRef || '-'
+          }</td></tr>
+          <tr><td><strong>Document Date:</strong></td><td>${
+            x.docDate || '-'
+          }</td></tr>
+        </table>
+      </fieldset>
 
-      <div class="so-col">
-        <div><strong>Total Weight:</strong> ${(x.totalQty * 0.68).toFixed(
-          1
-        )} KG</div>
-        <div><strong>Total Volume:</strong> ${(x.totalQty * 0.2).toFixed(
-          2
-        )} m³</div>
-        <div><strong>Bill-to party:</strong> ${
-          x.billTo || x.soldTo || '-'
-        }</div>
-        <div><strong>Payer:</strong> ${x.payer || x.soldTo || '-'}</div>
-      </div>
+      <!-- 🟧 Sales Data -->
+      <fieldset style="border:1px solid #ccc; padding:8px; border-radius:3px; background:#fdfdfd;">
+        <legend style="font-weight:bold; font-size:13px;">Sales Data</legend>
+        <table style="font-size:13px;">
+          <tr><td><strong>Order Type:</strong></td><td>${
+            x.orderType || 'OR'
+          }</td></tr>
+          <tr><td><strong>Pricing Date:</strong></td><td>${
+            x.docDate || '-'
+          }</td></tr>
+          <tr><td><strong>Pric. Procedure:</strong></td><td>${
+            x.pricProc || 'A01'
+          }</td></tr>
+          <tr><td><strong>Doc. Currency:</strong></td><td>${
+            x.currency || 'VND'
+          }</td></tr>
+          <tr><td><strong>Sales Area:</strong></td><td>${
+            x.salesOrg || '1000'
+          } / ${x.distChnl || '10'} / ${x.division || '00'}</td></tr>
+        </table>
+      </fieldset>
+
+      <!-- 🟩 Shipping Data -->
+      <fieldset style="border:1px solid #ccc; padding:8px; border-radius:3px; background:#fdfdfd;">
+        <legend style="font-weight:bold; font-size:13px;">Shipping Data</legend>
+        <table style="font-size:13px;">
+          <tr><td><strong>Ship-to Addr.:</strong></td><td>${
+            x.shipTo || x.soldTo || '—'
+          }</td></tr>
+          <tr><td><strong>Shipping Cond.:</strong></td><td>${
+            x.shipCond || '01'
+          }</td></tr>
+          <tr><td><strong>Delivery Status:</strong></td><td>${
+            x.status || 'OPEN'
+          }</td></tr>
+          <tr><td><strong>Total Weight:</strong></td><td>${(
+            x.totalQty * 0.68
+          ).toFixed(1)} KG</td></tr>
+          <tr><td><strong>Total Volume:</strong></td><td>${(
+            x.totalQty * 0.2
+          ).toFixed(2)} m³</td></tr>
+        </table>
+      </fieldset>
+
+      <!-- 🟨 Invoice & Payment -->
+      <fieldset style="border:1px solid #ccc; padding:8px; border-radius:3px; background:#fdfdfd;">
+        <legend style="font-weight:bold; font-size:13px;">Invoice & Payment</legend>
+        <table style="font-size:13px;">
+          <tr><td><strong>Billing Date:</strong></td><td>${
+            x.billingDate || '-'
+          }</td></tr>
+          <tr><td><strong>Payer:</strong></td><td>${
+            x.payer || x.soldTo || '-'
+          }</td></tr>
+          <tr><td><strong>Payment Term:</strong></td><td>${
+            x.payTerm || 'Z001'
+          }</td></tr>
+          <tr><td><strong>Incoterm:</strong></td><td>${
+            x.incoterm || 'EXW'
+          }</td></tr>
+        </table>
+      </fieldset>
+
+      <!-- 🟥 Reason for Reject -->
+      <fieldset style="border:1px solid #ccc; padding:8px; border-radius:3px; background:#fdfdfd;">
+        <legend style="font-weight:bold; font-size:13px;">Reason for Reject</legend>
+        <table style="font-size:13px;">
+          <tr><td><strong>Rejection Status:</strong></td><td>${
+            x.rejStatus || '—'
+          }</td></tr>
+          <tr><td><strong>Rejection Reason:</strong></td><td>${
+            x.rejReason || '—'
+          }</td></tr>
+        </table>
+      </fieldset>
+
     </div>
+
+
 
     <hr style="margin:20px 0;">
 

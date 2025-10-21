@@ -14,7 +14,6 @@ const Home = () => `
   <div class="group">
     <div class="radio-col">
       <label><input type="radio" name="mgmt" value="tracking"> Processing Status</label>
-      <label><input type="radio" name="mgmt" value="cancel"> Cancellation</label>
     </div>
     <div class="btnbar">
       <button onclick="goMgmt()">Execute</button>
